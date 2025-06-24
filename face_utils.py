@@ -3,21 +3,33 @@ import os
 import cv2
 FACES_BASE_DIR = "static/faces"
 
-def is_blurry(image_path, threshold=100.0):
+def is_blurry(image_path, threshold=80.0):
     image = cv2.imread(image_path)
     if image is None:
         return True
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # Convert to RGB because face_recognition works on RGB
+    rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    # Get face location
+    face_locations = face_recognition.face_locations(rgb_image)
+
+    if not face_locations:
+        return True  # Can't detect face, so treat as blurry or invalid
+
+    # Use the first face only
+    top, right, bottom, left = face_locations[0]
+
+    # Crop the face region
+    face_region = image[top:bottom, left:right]
+
+    # Check blur on cropped face only
+    gray = cv2.cvtColor(face_region, cv2.COLOR_BGR2GRAY)
     lap_var = cv2.Laplacian(gray, cv2.CV_64F).var()
+
     return lap_var < threshold
 
 def save_user_face(image_path, userid):
-    """
-    Saves the uploaded face image if it's clear and valid.
-    """
-    if is_blurry(image_path):
-        return False, "Image is too blurry. Please upload a clearer photo."
-
     image = face_recognition.load_image_file(image_path)
     face_locations = face_recognition.face_locations(image)
 
@@ -34,6 +46,11 @@ def save_user_face(image_path, userid):
 
     if face_height < image_height * 0.3 or face_width < image_width * 0.3:
         return False, "Face is too small or not clearly visible."
+
+    # NEW: Try encoding and reject if it fails
+    face_encoding = face_recognition.face_encodings(image, known_face_locations=[face_locations[0]])
+    if not face_encoding:
+        return False, "Face is unclear or blurry. Try a clearer photo."
 
     user_dir = os.path.join(FACES_BASE_DIR, userid)
     os.makedirs(user_dir, exist_ok=True)
