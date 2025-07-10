@@ -35,6 +35,7 @@ def save_user_face(image_path, userid):
 
     if not face_locations:
         return False, "No face detected."
+    rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     if len(face_locations) > 1:
         return False, "Multiple faces detected. Only one person allowed."

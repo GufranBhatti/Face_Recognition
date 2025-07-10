@@ -1,4 +1,6 @@
 from flask import Flask, request, jsonify
+
+from flask_cors import CORS
 import os
 from face_utils import save_user_face, match_face
 from werkzeug.utils import secure_filename
@@ -10,6 +12,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(FACES_FOLDER, exist_ok=True)
 
 app = Flask(__name__)
+CORS(app)  # Allow all origins (or specify your Flutter app's origin)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 @app.route('/')
@@ -61,4 +64,4 @@ def api_match():
     return jsonify({"match": bool_response}), 200
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
