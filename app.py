@@ -63,5 +63,19 @@ def api_match():
     bool_response = is_match[0]
     return jsonify({"match": bool_response}), 200
 
+@app.route('/api/is_enrolled', methods=['GET'])
+def check_enrollment():
+    employeeid = request.args.get('employeeid')
+
+    if not employeeid:
+        return jsonify({"error": "employeeid is required."}), 400
+
+    # Check if any file in FACES_FOLDER starts with 'employeeid_'
+    enrolled = any(
+        fname.startswith(f"{employeeid}") for fname in os.listdir(FACES_FOLDER)
+    )
+
+    return jsonify({"is_enrolled": enrolled}), 200
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
