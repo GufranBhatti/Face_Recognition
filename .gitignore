@@ -1,1 +1,23 @@
 /Face_app
+
+# Python environment and cache
+__pycache__/
+*.pyc
+venv/
+.env
+
+# Scratch and test files
+scratch/
+sample_face.jpg
+fake_face.jpg
+test_*.jpg
+test_*.png
+
+# Dynamic static files (but keep the directories)
+static/uploads/*
+!static/uploads/.gitkeep
+static/faces/*
+!static/faces/.gitkeep
+
+# Ignore macOS system files
+.DS_Store

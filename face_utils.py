@@ -1,6 +1,7 @@
 import face_recognition
 import os
 import cv2
+from liveness_utils import check_liveness
 FACES_BASE_DIR = "static/faces"
 
 def is_blurry(image_path, threshold=80.0):
@@ -40,6 +41,11 @@ def save_user_face(image_path, userid):
     if len(face_locations) > 1:
         return False, "Multiple faces detected. Only one person allowed."
 
+    # Check liveness
+    is_real, message = check_liveness(image_path, face_locations[0])
+    if not is_real:
+        return False, message
+
     top, right, bottom, left = face_locations[0]
     face_height = bottom - top
     face_width = right - left
@@ -73,7 +79,17 @@ def match_face(userid, image_path):
         return False, "Registered image not found."
 
     unknown_image = face_recognition.load_image_file(image_path)
-    unknown_encodings = face_recognition.face_encodings(unknown_image)
+    unknown_locations = face_recognition.face_locations(unknown_image)
+
+    if not unknown_locations:
+        return False, "No face detected in uploaded image."
+
+    # Check liveness
+    is_real, message = check_liveness(image_path, unknown_locations[0])
+    if not is_real:
+        return False, message
+
+    unknown_encodings = face_recognition.face_encodings(unknown_image, known_face_locations=[unknown_locations[0]])
 
     if not unknown_encodings:
         return False, "No face detected in uploaded image."
